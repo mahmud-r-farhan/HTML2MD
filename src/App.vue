@@ -20,10 +20,21 @@
             class="w-full h-64 md:h-96 p-4 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-shadow duration-300 resize-none"
             @input="autoConvert"
           ></textarea>
+          <div class="flex justify-end mt-2">
+            <span class="text-sm text-gray-400">{{ characterCount }}/10000</span>
+          </div>
         </div>
 
         <div class="flex flex-col space-y-3">
-          <label for="markdownOutput" class="text-lg font-semibold text-gray-100">Markdown Preview</label>
+          <div class="flex justify-between items-center">
+            <label for="markdownOutput" class="text-lg font-semibold text-gray-100">Markdown Preview</label>
+            <button
+              @click="copyToClipboard"
+              class="text-sm px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors"
+            >
+              {{ copied ? 'Copied!' : 'Copy' }}
+            </button>
+          </div>
           <div
             id="markdownOutput"
             class="w-full h-64 md:h-96 p-4 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 overflow-auto prose prose-invert max-w-none prose-pre:bg-gray-600 prose-pre:p-3 prose-pre:rounded-md"
@@ -33,6 +44,22 @@
           </div>
         </div>
       </main>
+
+      <div class="mt-6 flex justify-center">
+        <div class="bg-gray-700 rounded-lg p-4 max-w-lg">
+          <h3 class="text-lg font-semibold mb-2">Conversion Settings</h3>
+          <div class="grid grid-cols-2 gap-4">
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" v-model="options.preserveLinks" class="rounded bg-gray-600">
+              <span>Preserve Links</span>
+            </label>
+            <label class="flex items-center space-x-2">
+              <input type="checkbox" v-model="options.preserveImages" class="rounded bg-gray-600">
+              <span>Preserve Images</span>
+            </label>
+          </div>
+        </div>
+      </div>
 
       <footer class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
         <button
@@ -63,18 +90,40 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import TurndownService from 'turndown'
 
 const htmlInput = ref('')
 const markdownOutput = ref('')
+const copied = ref(false)
+const options = ref({
+  preserveLinks: true,
+  preserveImages: true
+})
+
+const characterCount = computed(() => htmlInput.value.length)
+
 const turndownService = new TurndownService({
-  headingStyle: 'atx', 
-  hr: '---', 
+  headingStyle: 'atx',
+  hr: '---',
   bulletListMarker: '*',
-  codeBlockStyle: 'fenced', 
-  emDelimiter: '_', 
+  codeBlockStyle: 'fenced',
+  emDelimiter: '_',
+  linkStyle: 'referenced',
+  fence: '```',
+  preformattedCode: true,
 });
+
+const copyToClipboard = async () => {
+  if (!markdownOutput.value) return
+  try {
+    await navigator.clipboard.writeText(markdownOutput.value)
+    copied.value = true
+    setTimeout(() => copied.value = false, 2000)
+  } catch (err) {
+    console.error('Failed to copy:', err)
+  }
+}
 
 const convertHtmlToMarkdown = () => {
   if (htmlInput.value.trim() === '') {
@@ -107,6 +156,14 @@ const downloadMarkdown = () => {
   document.body.removeChild(link)
   URL.revokeObjectURL(link.href)
 }
+
+watch(options, () => {
+  turndownService.setOptions({
+    keepReplacement: options.value.preserveLinks,
+    keepImages: options.value.preserveImages,
+  })
+  autoConvert()
+}, { deep: true })
 </script>
 
 <style scoped>
@@ -115,5 +172,9 @@ const downloadMarkdown = () => {
 }
 .prose :where(code):not(:where([class~="not-prose"] *))::after {
   content: "";
+}
+.copied-toast {
+  @apply fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg;
+  animation: fadeOut 2s forwards;
 }
 </style>
