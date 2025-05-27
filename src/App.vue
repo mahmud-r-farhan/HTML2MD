@@ -20,8 +20,9 @@
             class="w-full h-64 md:h-96 p-4 bg-gray-700 border border-gray-600 rounded-lg text-gray-200 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-shadow duration-300 resize-none"
             @input="autoConvert"
           ></textarea>
-          <div class="flex justify-end mt-2">
-            <span class="text-sm text-gray-400">{{ characterCount }}/10000</span>
+          <div class="flex justify-between mt-2 text-sm text-gray-400">
+            <span>{{ characterCount }}/10000</span>
+            <span v-if="characterCount > 10000" class="text-red-400">Input too long!</span>
           </div>
         </div>
 
@@ -66,9 +67,6 @@
           @click="convertHtmlToMarkdown"
           class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 0l-3 3a1 1 0 101.414 1.414L9 9.414V13a1 1 0 102 0V9.414l1.293 1.293a1 1 0 001.414-1.414z" clip-rule="evenodd" />
-          </svg>
           Convert
         </button>
         <button
@@ -76,9 +74,6 @@
           :disabled="!markdownOutput"
           class="w-full sm:w-auto px-8 py-3 bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor">
-            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
-          </svg>
           Download
         </button>
       </footer>
@@ -102,7 +97,6 @@ const options = ref({
 })
 
 const characterCount = computed(() => htmlInput.value.length)
-
 const turndownService = new TurndownService({
   headingStyle: 'atx',
   hr: '---',
@@ -112,21 +106,51 @@ const turndownService = new TurndownService({
   linkStyle: 'referenced',
   fence: '```',
   preformattedCode: true,
-});
+})
 
-const copyToClipboard = async () => {
-  if (!markdownOutput.value) return
-  try {
-    await navigator.clipboard.writeText(markdownOutput.value)
-    copied.value = true
-    setTimeout(() => copied.value = false, 2000)
-  } catch (err) {
-    console.error('Failed to copy:', err)
+const updateRules = () => {
+  turndownService.remove('keep-links')
+  turndownService.remove('keep-images')
+
+  if (options.value.preserveLinks) {
+    turndownService.addRule('keep-links', {
+      filter: 'a',
+      replacement: (content, node) => {
+        const href = node.getAttribute('href')
+        return `[${content}](${href})`
+      }
+    })
+  }
+
+  if (options.value.preserveImages) {
+    turndownService.addRule('keep-images', {
+      filter: 'img',
+      replacement: (content, node) => {
+        const alt = node.getAttribute('alt') || ''
+        const src = node.getAttribute('src') || ''
+        return `![${alt}](${src})`
+      }
+    })
   }
 }
 
+watch(options, () => {
+  updateRules()
+  convertHtmlToMarkdown()
+}, { deep: true })
+
+updateRules()
+
+let timeout
+const autoConvert = () => {
+  clearTimeout(timeout)
+  timeout = setTimeout(() => {
+    convertHtmlToMarkdown()
+  }, 300)
+}
+
 const convertHtmlToMarkdown = () => {
-  if (htmlInput.value.trim() === '') {
+  if (htmlInput.value.trim() === '' || characterCount.value > 10000) {
     markdownOutput.value = ''
     return
   }
@@ -138,15 +162,20 @@ const convertHtmlToMarkdown = () => {
   }
 }
 
-const autoConvert = () => {
-  convertHtmlToMarkdown();
+const copyToClipboard = async () => {
+  if (!markdownOutput.value) return
+  try {
+    await navigator.clipboard.writeText(markdownOutput.value)
+    copied.value = true
+    setTimeout(() => copied.value = false, 2000)
+  } catch (err) {
+    alert('Clipboard API not supported. Please copy manually.')
+    console.error('Failed to copy:', err)
+  }
 }
-watch(htmlInput, () => {
-});
 
 const downloadMarkdown = () => {
   if (!markdownOutput.value) return
-
   const blob = new Blob([markdownOutput.value], { type: 'text/markdown;charset=utf-8' })
   const link = document.createElement('a')
   link.href = URL.createObjectURL(blob)
@@ -156,14 +185,6 @@ const downloadMarkdown = () => {
   document.body.removeChild(link)
   URL.revokeObjectURL(link.href)
 }
-
-watch(options, () => {
-  turndownService.setOptions({
-    keepReplacement: options.value.preserveLinks,
-    keepImages: options.value.preserveImages,
-  })
-  autoConvert()
-}, { deep: true })
 </script>
 
 <style scoped>
@@ -172,9 +193,5 @@ watch(options, () => {
 }
 .prose :where(code):not(:where([class~="not-prose"] *))::after {
   content: "";
-}
-.copied-toast {
-  @apply fixed bottom-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg;
-  animation: fadeOut 2s forwards;
 }
 </style>
