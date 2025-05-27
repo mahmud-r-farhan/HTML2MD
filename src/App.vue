@@ -65,14 +65,14 @@
       <footer class="mt-8 flex flex-col sm:flex-row justify-center items-center gap-4">
         <button
           @click="convertHtmlToMarkdown"
-          class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75"
+          class="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:scale-[101%] transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-opacity-75"
         >
           Convert
         </button>
         <button
           @click="downloadMarkdown"
           :disabled="!markdownOutput"
-          class="w-full sm:w-auto px-8 py-3 bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed"
+          class="w-full sm:w-auto px-8 py-3 bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:scale-[101%] transition-all duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-75 disabled:opacity-50 disabled:transform-none disabled:cursor-not-allowed"
         >
           Download
         </button>
@@ -82,6 +82,17 @@
       </p>
     </div>
   </div>
+    <div class="bottom-2  left-2 text-gray-400 text-start">
+      <p class="text-sm">
+        <a 
+        href="https://github.com/mahmud-r-farhan/HTML2MD/issues"
+        class="text-blue-400 hover:underline hover:text-blue-500"
+        target="_blank" rel="noopener noreferrer"
+        >
+          issue?
+        </a>
+      </p>
+    </div>
 </template>
 
 <script setup>

@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
 body {
   @apply bg-gray-900 text-gray-200 antialiased;
 }
