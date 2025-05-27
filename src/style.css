@@ -1,9 +1,7 @@
-/* src/style.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Basic dark theme body styles */
 body {
   @apply bg-gray-900 text-gray-200 antialiased;
 }

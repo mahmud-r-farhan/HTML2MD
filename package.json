@@ -9,9 +9,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@formkit/auto-animate": "^0.8.2",
+    "turndown": "^7.2.0",
     "vue": "^3.5.13"
   },
   "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
     "@vitejs/plugin-vue": "^5.2.3",
     "autoprefixer": "^10.4.21",
     "postcss": "^8.5.3",
