@@ -69,4 +69,4 @@ Feel free to fork the repo and submit a pull request. 🙌
 
 ## 🔗 Links
 
--   🔧 Live App: [https://github.com/mahmud-r-farhan/HTML2MD](https://htmltomdconverter.vercel.app/)
+-   🔧 Live App: [https://htmltomdconverter.vercel.app/](https://htmltomdconverter.vercel.app/)
